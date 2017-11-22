@@ -6,12 +6,7 @@ const router = express.Router();
 var data = require('../db/dummy-data');
 
 const { DATABASE } = require('../config');
-const knex = require('knex')({
-  client: 'pg',
-  connection: {
-    database: 'dev-blog-app'
-  }
-});
+const knex = require('knex')(DATABASE);
 
 const Treeize   = require('treeize');
 const stories   = new Treeize();

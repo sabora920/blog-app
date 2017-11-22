@@ -1,6 +1,6 @@
 'use strict';
 
-const DATABASE_URL = process.env.DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL 
                     || global.DATABASE_URL
                     || 'postgresql://localhost/dev-blog-app'; //need to have the right url in place
 
