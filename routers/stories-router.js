@@ -8,38 +8,25 @@ var data = require('../db/dummy-data');
 const { DATABASE } = require('../config');
 const knex = require('knex')(DATABASE);
 
-const Treeize   = require('treeize');
-const stories   = new Treeize();
-
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/stories', (req, res) => {
-  // if (req.query.search) {
-  //   const filtered = data.filter((obj) => obj.title.includes(req.query.search));
-  //   res.json(filtered);
-  // } else {
-  //   res.json(data);
-  // }
-  knex
-    .select('id', 'title', 'content')
-    .from('stories')
-    .limit(10)
+  knex('stories')
+    .select()
     .then(results => {
-      stories.grow(results);
-      console.log(JSON.stringify(stories, null, 2));
-    });
+      res.json(results);
+    })
+    .catch(err => console.log(err));
 });
 
 /* ========== GET/READ SINGLE ITEMS ========== */
 router.get('/stories/:id', (req, res) => {
-  // const id = Number(req.params.id);
-  // const item = data.find((obj) => obj.id === id);
-  // res.json(item);
-  knex
-    .select('stories.id', 'title', 'content')
-    .from('stories')
+
+  knex('stories')
+    .select()
     .then(results => {
-      stories.grow(results);
-      console.log(JSON.stringify(stories, null, 2))
+      const id = Number(req.params.id);
+      const item = results.find((obj) => obj.id === id);
+      res.json(item);
     });
 });
 
@@ -47,43 +34,46 @@ router.get('/stories/:id', (req, res) => {
 router.post('/stories', (req, res) => {
   const {title, content} = req.body;
   
-  // /***** Never Trust Users! *****/
-  
   const newItem = {
-    id: data.nextVal++,
-    title: title,
-    content: content
+    title,
+    content
   };
-  // data.push(newItem);
-  // res.location(`${req.originalUrl}/${newItem.id}`).status(201).json(newItem);
-  
-  // knex.select()
-  //   .from('stories')
-  //   .then(results =>{
-  //     knex.insert({newItem}).into('stories');
-  //   });
-  
-    knex.insert({newItem}).into('stories');
+
+  knex
+    .insert(newItem)
+    .into('stories')
+    .then(result => {
+      res.json(result).status(201);
+    });
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/stories/:id', (req, res) => {
   const {title, content} = req.body;
-  
-  /***** Never Trust Users! *****/
-  
+
   const id = Number(req.params.id);
-  const item = data.find((obj) => obj.id === id);
-  Object.assign(item, {title, content});
-  res.json(item);
+  
+  knex('stories')
+    .where('id', id)
+    .update({
+      title,
+      content
+    })
+    .then(result => {
+      res.json(result);
+    });
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/stories/:id', (req, res) => {
   const id = Number(req.params.id);
-  const index = data.findIndex((obj) => obj.id === id);
-  data.splice(index, 1);
-  res.status(204).end();
+
+  knex('stories')
+    .where('id', id)
+    .del()
+    .then(result => {
+      res.json(result);
+    });
 });
 
 module.exports = router;
