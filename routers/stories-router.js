@@ -1,79 +1,33 @@
-'use strict';
+const mongoose = require('mongoose');
 
-const express = require('express');
-const router = express.Router();
-
-var data = require('../db/dummy-data');
-
-const { DATABASE } = require('../config');
-const knex = require('knex')(DATABASE);
-
-/* ========== GET/READ ALL ITEMS ========== */
-router.get('/stories', (req, res) => {
-  knex('stories')
-    .select()
-    .then(results => {
-      res.json(results);
-    })
-    .catch(err => console.log(err));
+const blogSchema = mongoose.Schema({
+  title: {type: String, required: true},
+  content: {type: String, required: true},
+  author: {
+    firstName: {type: String},
+    lastName: {type: String}
+  }
 });
-
-/* ========== GET/READ SINGLE ITEMS ========== */
-router.get('/stories/:id', (req, res) => {
-
-  knex('stories')
-    .select()
-    .then(results => {
-      const id = Number(req.params.id);
-      const item = results.find((obj) => obj.id === id);
-      res.json(item);
-    });
-});
-
-/* ========== POST/CREATE ITEM ========== */
-router.post('/stories', (req, res) => {
-  const {title, content} = req.body;
   
-  const newItem = {
-    title,
-    content
+blogSchema.virtual('authorString').get(function() {
+  return `${this.author.firstName} ${this.author.lastName}`.trim()});
+
+
+// this is an *instance method* which will be available on all instances
+// of the model. This method will be used to return an object that only
+// exposes *some* of the fields we want from the underlying data
+blogSchema.methods.apiRepr = function() {
+
+  return {
+    id: this._id,
+    title: this.title,
+    content: this.content,
+    author: this.author,
   };
+}
 
-  knex
-    .insert(newItem)
-    .into('stories')
-    .then(result => {
-      res.json(result).status(201);
-    });
-});
+// note that all instance methods and virtual properties on our
+// schema must be defined *before* we make the call to `.model`.
+const Blog = mongoose.model('Blog', blogSchema);
 
-/* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/stories/:id', (req, res) => {
-  const {title, content} = req.body;
-
-  const id = Number(req.params.id);
-  
-  knex('stories')
-    .where('id', id)
-    .update({
-      title,
-      content
-    })
-    .then(result => {
-      res.json(result);
-    });
-});
-
-/* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/stories/:id', (req, res) => {
-  const id = Number(req.params.id);
-
-  knex('stories')
-    .where('id', id)
-    .del()
-    .then(result => {
-      res.json(result);
-    });
-});
-
-module.exports = router;
+module.exports = {Blog};
